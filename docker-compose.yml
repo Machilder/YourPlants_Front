@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+
+  p1_db:
+    # DockerHubにあるmysql8.0のイメージを使用
+    image: mysql:latest
+    # MySQL8.0以降の認証方式に元に戻す設定
+    command: --default-authentication-plugin=mysql_native_password
+    # dbディレクトリをホスト側に作成してコンテナ側と同期
+    volumes: 
+      - "./db:/var/lib/mysql"
+    # .envの環境変数を展開してMYSQLコンテナのパスワードを登録
+      - /tmp/dockerdir:/etc/mysql/conf.d/
+    environment:
+      MYSQL_ROOT_PASSWORD: "mypassword"
+      #$MYSQL_ROOT_PASSWORD
+    ports:
+      - "3306:3306"
+#    networks:
+#      - my_network
+
+  p1_backend:
+    # ./backendにあるDockerfiｌｅをもとにイメージを生成する
+    build:
+      context: ./backend
+      args:
+        WORKDIR: /backend
+    command: /bin/sh -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 5030 -b '0.0.0.0'"
+    volumes:
+      - "./backend:/backend"
+      - ./vendor/bundle:/vendor/bundle
+    environment:
+      TZ: Asia/Tokyo
+      MYSQL_ROOT_PASSWORD: $$MYSQL_ROOT_PASSWORD
+    ports:
+      - "5030:5030"
+    depends_on:
+      - p1_db
+#    networks:
+#      - my_network
+  p1_frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        WORKDIR: /frontend
+    volumes:
+      - "./frontend:/frontend"
+    #command: sh -c "cd /app && yarn start"
+    #command: sh -c "cd frontend && PORT=3000 yarn start"
+    ports:
+      - "3000:3000"
+    tty: true
+    stdin_open: true
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - p1_backend
+
+#    networks:
+#      - my_network
+
+#networks:
+#  my_network:
+#    driver: bridgev
