@@ -1,0 +1,26 @@
+# ベースイメージを指定
+#FROM node:16.13.2-alpine
+FROM node:latest
+#FROM node:14.17.1-alpine
+# 作業ディレクトリを設定
+#これなくしてcreateappでfrontend指定でもいいかも
+WORKDIR /frontend/app
+
+ENV CI=true
+
+# Reactアプリのセットアップ（TypeScriptを使用）
+#RUN yarn update && npm install -g npm
+#RUN apt-get
+#RUN npm create-react-app . --template typescript
+
+# API通信用のaxiosをインストール
+#RUN npm install axios
+
+# フロントエンドをビルド
+#RUN npm run build
+
+# サーバを起動
+ENTRYPOINT ["yarn", "start"]
+
+# ポートを公開
+#EXPOSE 3000
